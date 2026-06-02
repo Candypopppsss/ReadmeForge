@@ -148,6 +148,10 @@ export function useReadmeState() {
     Array.from(files).forEach(file => {
       if (!file.type.startsWith('image/')) return;
       const reader = new FileReader();
+      /* FIX: Added error handling for FileReader to prevent silent failures. */
+      reader.onerror = () => {
+        toast('❌ Failed to read image file.');
+      };
       reader.onload = (e) => {
         setScreenshots(prev => [...prev, { name: file.name, dataUrl: e.target.result }]);
       };

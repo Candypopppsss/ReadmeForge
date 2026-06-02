@@ -1879,40 +1879,35 @@
    * @function copyMarkdown
    * @returns {void}
    */
-  function copyMarkdown() {
+  async function copyMarkdown() {
     if (!currentMd) {
       toast("Generate content first!");
       return;
     }
     
     // Try modern Clipboard API first
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard
-        .writeText(currentMd)
-        .then(function () {
-          toast("✓ Copied to clipboard!");
-        })
-        .catch(fbCopy);  // Fall back on error
-    } else {
-      // Fall back to older method
-      fbCopy();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(currentMd);
+        toast("✓ Copied to clipboard!");
+        return;
+      }
+    } catch (err) {
+      // Fallback on error
     }
     
     // Fallback copy method for older browsers
-    function fbCopy() {
-      // Create temporary textarea (off-screen)
+    try {
       var ta = document.createElement("textarea");
       ta.value = currentMd;
       ta.style.cssText = "position:absolute;left:-9999px";
       document.body.appendChild(ta);
       ta.select();  // Select all text
-      try {
-        document.execCommand("copy");  // Copy to clipboard
-        toast("✓ Copied!");
-      } catch (e) {
-        toast("Copy failed");
-      }
+      document.execCommand("copy");  // Copy to clipboard
       document.body.removeChild(ta);  // Clean up
+      toast("✓ Copied to clipboard!");
+    } catch (e) {
+      toast("Copy failed — please select the raw markdown and copy manually.");
     }
   }
   window.copyMarkdown = copyMarkdown;  // Expose globally for HTML
@@ -2217,7 +2212,7 @@
    */
   function initializeDarkMode() {
     var savedTheme = localStorage.getItem("readmeforge-theme");
-    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var prefersDark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)").matches : true;
     var isDarkMode = savedTheme ? savedTheme === "dark" : prefersDark;
     
     // Apply saved preference or system preference

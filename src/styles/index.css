@@ -235,6 +235,7 @@ body::after {
   border-radius: 20px;
   border: 1px solid var(--hero-chip-border);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .hero-source-link:hover {
@@ -309,6 +310,7 @@ body.light-mode .hero-title {
     0 10px 30px rgba(0, 0, 0, 0.5),
     inset 0 0 20px rgba(99, 102, 241, 0.2);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -769,6 +771,7 @@ body.light-mode .hero-title {
   margin-right: 4px;
   transition: opacity 0.2s ease, color 0.2s ease;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .sec-toggle:hover .drag-handle {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { md2html, esc } from '../../utils/markdownUtils';
+import { md2html } from '../../utils/markdownUtils';
 import { ZOOM_LEVELS, PREVIEW_ZOOM_KEY } from '../../utils/constants';
 import { useToast } from '../../components/ui/Toast';
 
@@ -80,48 +80,72 @@ export default function PreviewPanel({ currentMd, formData, sectionState, select
   useEffect(() => {
     const handler = (e) => {
       if (!(e.ctrlKey || e.metaKey)) return;
-      if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); }
-      if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); }
+      if (e.key === '+' || e.key === '=') { 
+        e.preventDefault(); 
+        setZoom(z => { const n = ZOOM_LEVELS.find(l => l > z); return n !== undefined ? n : z; }); 
+      }
+      if (e.key === '-' || e.key === '_') { 
+        e.preventDefault(); 
+        setZoom(z => { const n = [...ZOOM_LEVELS].reverse().find(l => l < z); return n !== undefined ? n : z; }); 
+      }
       if (e.key === '0') { e.preventDefault(); setZoom(1); }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [zoom]);
+  }, []);
 
   function zoomIn() {
-    const next = ZOOM_LEVELS.find(l => l > zoom);
-    if (next !== undefined) setZoom(next);
+    setZoom(z => {
+      const next = ZOOM_LEVELS.find(l => l > z);
+      return next !== undefined ? next : z;
+    });
   }
   function zoomOut() {
-    const next = [...ZOOM_LEVELS].reverse().find(l => l < zoom);
-    if (next !== undefined) setZoom(next);
+    setZoom(z => {
+      const next = [...ZOOM_LEVELS].reverse().find(l => l < z);
+      return next !== undefined ? next : z;
+    });
   }
 
   const copyMarkdown = useCallback(async () => {
     if (!currentMd) { toast('Generate content first!'); return; }
+    
     try {
-      await navigator.clipboard.writeText(currentMd);
-      toast('✓ Copied to clipboard!');
-    } catch {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(currentMd);
+        toast('✓ Copied to clipboard!');
+        return;
+      }
+    } catch (err) {
+      // Fall through to fallback
+    }
+
+    try {
       const ta = document.createElement('textarea');
       ta.value = currentMd;
       ta.style.cssText = 'position:absolute;left:-9999px';
       document.body.appendChild(ta);
       ta.select();
-      try { document.execCommand('copy'); toast('✓ Copied!'); } catch { toast('Copy failed'); }
+      document.execCommand('copy');
       document.body.removeChild(ta);
+      toast('✓ Copied to clipboard!');
+    } catch (err) {
+      toast('Copy failed — please select the raw markdown and copy manually.');
     }
   }, [currentMd, toast]);
 
   const downloadMd = useCallback(() => {
     if (!currentMd) { toast('Nothing to download yet!'); return; }
     const blob = new Blob([currentMd], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = 'README.md';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    /* FIX: Revoke the object URL after download to prevent memory leaks. */
+    URL.revokeObjectURL(url);
     toast('✓ README.md downloaded!');
   }, [currentMd, toast]);
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SECTIONS, TECHS, TEMPLATES } from '../../utils/constants';
+import { SECTIONS, TEMPLATES } from '../../utils/constants';
 
 export default function Sidebar({
   sectionState, toggleSection,

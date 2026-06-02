@@ -1,14 +1,15 @@
-import { useEffect, useRef, useMemo } from 'react';
+/* FIX: Consolidated React imports; removed unused useEffect, useRef. */
+import { useMemo, useState } from 'react';
 import { useReadmeState } from '../../hooks/useReadmeState';
 import { useToast } from '../../components/ui/Toast';
 import { generateMarkdown } from '../../utils/markdownUtils';
-import { SECTIONS } from '../../utils/constants';
+/* FIX: Removed unused SECTIONS import. */
 import Sidebar from './Sidebar';
 import EditorPanel from './EditorPanel';
 import PreviewPanel from './PreviewPanel';
 import Navbar from '../../components/layout/Navbar';
 import SEOHead from '../../components/shared/SEOHead';
-import { useState } from 'react';
+
 
 export default function ReadmeMaker() {
   const toast = useToast();
@@ -39,11 +40,35 @@ export default function ReadmeMaker() {
     toast('✓ Template applied!');
   }
 
-  function handleCopyMarkdown() {
+  /* FIX: Completed handleCopyMarkdown with cross-browser fallback.
+     Added try/catch to handle all promise rejections and errors. */
+  async function handleCopyMarkdown() {
     if (!currentMd) { toast('Generate content first!'); return; }
-    navigator.clipboard.writeText(currentMd)
-      .then(() => toast('✓ Copied to clipboard!'))
-      .catch(() => toast('Copy failed'));
+
+    // Try modern Clipboard API first (Chrome/Edge)
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(currentMd);
+        toast('✓ Copied to clipboard!');
+        return;
+      }
+    } catch (err) {
+      // Clipboard API can fail in Firefox or insecure contexts — fall through to fallback
+    }
+
+    // Fallback: temporary textarea + execCommand('copy') (Firefox and older browsers)
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = currentMd;
+      ta.style.cssText = 'position:absolute;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('✓ Copied to clipboard!');
+    } catch (err) {
+      toast('Copy failed — please select the raw markdown and copy manually.');
+    }
   }
 
   function handleResetAll() {
@@ -132,4 +157,4 @@ export default function ReadmeMaker() {
       </div>
     </>
   );
-}
+}

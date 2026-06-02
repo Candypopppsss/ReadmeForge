@@ -270,7 +270,8 @@ export default function EditorPanel({
             <div className="screenshot-list">
               {screenshots.map((ss, idx) => (
                 <div key={idx} className="screenshot-item">
-                  <img src={ss.dataUrl} alt="" />
+                  {/* FIX: Added descriptive alt text for accessibility */}
+                  <img src={ss.dataUrl} alt={ss.name} />
                   <span className="screenshot-item-name">{ss.name}</span>
                   <button className="screenshot-item-remove" onClick={() => removeScreenshot(idx)}>✕</button>
                 </div>

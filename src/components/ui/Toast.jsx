@@ -1,11 +1,13 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const [message, setMessage] = useState('');
   const [visible, setVisible] = useState(false);
-  const timerRef = { current: null };
+  /* FIX: Use useRef instead of a plain object so the timer ID
+     persists across renders and clearTimeout works correctly. */
+  const timerRef = useRef(null);
 
   const toast = useCallback((msg) => {
     setMessage(msg);
